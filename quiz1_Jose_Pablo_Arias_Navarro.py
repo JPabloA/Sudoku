@@ -52,3 +52,7 @@ def extrae_digitos(digito, numero):
         return -1
     else:
         return resultado
+
+def printHolis():
+    for numero in range(10):
+        print ('Holis')
