@@ -133,7 +133,8 @@ def validacionNombre():
     return False
 
 def validacionElementoBaseCasilla(indiceFila, indiceColumna):
-    global dificultadSeleccionada, numero,partidasFaciles, copia_partida
+    global dificultadSeleccionada, numero, partidasFaciles, copia_partida
+
 
     if dificultadSeleccionada == 'Facil':
         if copia_partidas_faciles[numero][indiceFila][indiceColumna] != '':
@@ -154,12 +155,37 @@ def validacionElementoBaseCasilla(indiceFila, indiceColumna):
 
 
 def ganarPartida():
-    global partida
+    global partida, dificultadSeleccionada, nombre, listaConTiemposTop
 
     for fila in partida:
         for elemento in fila:
             if elemento == '':
                 return False
+
+    if dificultadSeleccionada == 'Facil':
+        if timer:
+            conversion = tiempoTranscurridoTimer()
+            ordenarTiempo((nombre, conversion[0], conversion[1], conversion[2]), listaConTiemposTop[0])
+        else:
+            ordenarTiempo((nombre, horas, minutos, segundos), listaConTiemposTop[0])
+
+    elif dificultadSeleccionada == 'Intermedio':
+        if timer:
+            conversion = tiempoTranscurridoTimer()
+            ordenarTiempo((nombre, conversion[0], conversion[1], conversion[2]), listaConTiemposTop[1])
+        else:
+            ordenarTiempo((nombre, horas, minutos, segundos), listaConTiemposTop[1])
+
+    elif dificultadSeleccionada == 'Dificil':
+        if timer:
+            conversion = tiempoTranscurridoTimer()
+            ordenarTiempo((nombre, conversion[0], conversion[1], conversion[2]), listaConTiemposTop[2])
+        else:
+            ordenarTiempo((nombre, horas, minutos, segundos), listaConTiemposTop[2])
+
+    archivoAGuardar = open('sudoku2021topx.dat', 'wb' )
+    pickle.dump(listaConTiemposTop, archivoAGuardar)
+    archivoAGuardar.close()
 
     return True
 
@@ -179,7 +205,6 @@ def timerExpirado():
 
             return True
 
-
         elif respuesta == 1:
             eleccionTimerDown = respuesta
 
@@ -198,6 +223,49 @@ def timerExpirado():
 
 #                                    FUNCIONES RELOJ
 #############################################################################################
+
+def cargarTopX():
+    global listaConTiemposTop
+    try:
+        archivoAAbrir = open('sudoku2021topx.dat', 'rb')
+        listaConTiemposTop = pickle.load(archivoAAbrir)
+        archivoAAbrir.close()
+    except:
+        pass
+
+def ordenarTiempo(nuevoTiempo, listaConTiempos):
+    horasNT = nuevoTiempo[1]
+    minutosNT = nuevoTiempo[2]
+    segundosNT = nuevoTiempo[3]
+
+    for indiceTiempoActual in range(len(listaConTiempos)):
+
+        tiempoActual = listaConTiempos[indiceTiempoActual]
+        horasTA = tiempoActual[1]
+        minutosTA = tiempoActual[2]
+        segundosTA = tiempoActual[3]
+
+        if horasNT < horasTA:
+            listaConTiempos.insert(indiceTiempoActual, nuevoTiempo)
+            return
+        elif horasNT == horasTA and minutosNT < minutosTA:
+            listaConTiempos.insert(indiceTiempoActual, nuevoTiempo)
+            return
+        elif horasNT == horasTA and minutosNT == minutosTA and segundosNT < segundosTA:
+            listaConTiempos.insert(indiceTiempoActual, nuevoTiempo)
+            return
+
+    listaConTiempos.append(nuevoTiempo)
+
+def tiempoTranscurridoTimer():
+    global horas, minutos, segundos, c_horas, c_minutos, c_segundos
+
+    horasTranscurridas = c_horas - horas
+    minutosTranscurridos = c_minutos - minutos
+    segundosTranscurridos = c_segundos - segundos
+
+    return (horasTranscurridas, minutosTranscurridos, segundosTranscurridos)
+
 def reset_reloj():  # devuelve el reloj a 0
 
     global timer_label
@@ -327,6 +395,12 @@ def objetoABinarioEliminadas(objeto):
     elemento = objeto.obtener_jugada_eliminada()
     return elemento
 
+def objetoABinarioTop(objeto):
+
+    elemento = objeto.obtener_datos_tiempo()
+    return elemento
+
+
 # De binario objeto
 
 def binarioAObjetoHechas(elemento):
@@ -340,12 +414,16 @@ def binarioAObjetoEliminadas(elemento):
     objeto = Jugadas_eliminadas(elemento[0], elemento[1], elemento[2], elemento[3])
     return objeto
 
+def binarioAObjetoTop(elemento):
+    objeto = TopX(elemento[0], elemento[1], elemento[2], elemento[3], elemento[4])
+    return objeto
+
 ########################################################################################################################
 
 def guardar_juego():
 
     global timer, reloj, pilaJugadasHechas, pilaJugadasEliminadas,horas,minutos,segundos,c_horas,c_minutos, c_segundos
-    global dificultadSeleccionada, cantidadjugadasTopX, configElementos, nombre ,partida
+    global dificultadSeleccionada, cantidadjugadasTopX, configElementos, nombre, partida, numero
 
     nombre_g = nombre
 
@@ -375,6 +453,8 @@ def guardar_juego():
 
     tipo_reloj = 0
 
+    numero_g = numero
+
     if reloj:
         tipo_reloj = 1
 
@@ -390,21 +470,23 @@ def guardar_juego():
     lista_base_reloj = [c_horas_g,c_minutos_g,c_segundos_g]
 
     lista_con_todo = [nombre_g, lista_pilas, lista_reloj, lista_base_reloj, dificultadSeleccionada_g, cantidadjugadasTopX_g,
-                      configElementos_g, tipo_reloj, partida_g]
+                      configElementos_g, tipo_reloj, partida_g, numero_g]
 
 
     archivo = open('sudoku2021juegoactual.dat','wb')
-    pickle.dump(lista_con_todo,archivo)
+    pickle.dump(lista_con_todo, archivo)
     archivo.close()
     messagebox.showinfo("GUARDAR", "PARTIDA GUARDADA")
 
 
 def cargar_juego():
 
-    global timer, reloj, pilaJugadasHechas, pilaJugadasEliminadas, horas, minutos, segundos, c_horas, c_minutos, c_segundos
-    global dificultadSeleccionada, cantidadjugadasTopX, configElementos, nombre, entryNombre, partida, ventanaJuego, opcionIniciarJuego
+    global timer, reloj, pilaJugadasHechas, pilaJugadasEliminadas, horas, minutos, segundos, c_horas, c_minutos, c_segundos, flagCargarJuego
+    global dificultadSeleccionada, cantidadjugadasTopX, configElementos, nombre, entryNombre, partida, ventanaJuego, opcionIniciarJuego, numero
 
     archivo = open('sudoku2021juegoactual.dat','rb')
+
+    reseteoDeJuego()
 
     lista_con_todo = pickle.load(archivo)
 
@@ -412,9 +494,11 @@ def cargar_juego():
 
     if lista_con_todo[7] == 1:
         reloj = True
+        timer = False
 
     if lista_con_todo[7] == 2:
         timer = True
+        reloj = False
 
     nombre = lista_con_todo[0]
 
@@ -440,21 +524,23 @@ def cargar_juego():
 
     configElementos = lista_con_todo[6]
 
+    numero = lista_con_todo[9]
+
     entryNombre.delete(0,END)
 
     entryNombre.insert(0,nombre)
+
+    flagCargarJuego = True
+
 
     ventanaJuego.destroy()
     jugar()
     entryNombre.delete(0, END)
     entryNombre.insert(0, nombre)
-    opcionIniciarJuego()
     archivo.close()
 
 def mostrarTopX():
-    listaConTiempos = [[('Pablo', 12, 32, 0), ('Luis', 12, 35, 0), ('Juan', 11, 0, 0)], [('KK', 12, 32, 0), ('Pedro', 12, 35, 0), ('Messi', 11, 0, 0)],
-    [('El bicho', 12, 32, 0), ('Navas', 12, 35, 0), ('JuanKi', 11, 0, 0)]]
-
+    global listaConTiemposTop, cantidadjugadasTopX
 
     pdf = FPDF('P', 'mm', 'a4')
     pdf.add_page()
@@ -466,7 +552,10 @@ def mostrarTopX():
     pdf.cell(w=75, h=15, txt='Jugador', border=1, align='C', fill=0)
     pdf.multi_cell(w=0, h=15, txt='Tiempo', border=1, align='C', fill=0)
 
-    for datosTiempoJugador in listaConTiempos[0]:
+    contador = 0
+    for datosTiempoJugador in listaConTiemposTop[2]:
+        if contador == cantidadjugadasTopX and cantidadjugadasTopX != 0:
+            break
 
         str_horas = f'{datosTiempoJugador[1]}' if datosTiempoJugador[1] > 9 else f'0{datosTiempoJugador[1]}'
         str_minutos = f'{datosTiempoJugador[2]}' if datosTiempoJugador[2] > 9 else f'0{datosTiempoJugador[2]}'
@@ -475,13 +564,17 @@ def mostrarTopX():
         pdf.cell(w=75, h=15, txt=datosTiempoJugador[0], border=1, align='C', fill=0)
         tiempoResultado = str_horas + ":" + str_minutos + ":" + str_segundos
         pdf.multi_cell(w=0, h=15, txt= tiempoResultado, border=1, align='C', fill=0)
+        contador += 1
 
     pdf.cell(120, 8, ln=True)
     pdf.cell(120, 8, txt='Intermedio', ln=True)
     pdf.cell(w=75, h=15, txt='Jugador', border=1, align='C', fill=0)
     pdf.multi_cell(w=0, h=15, txt='Tiempo', border=1, align='C', fill=0)
 
-    for datosTiempoJugador in listaConTiempos[1]:
+    contador = 0
+    for datosTiempoJugador in listaConTiemposTop[1]:
+        if contador == cantidadjugadasTopX and cantidadjugadasTopX != 0:
+            break
 
         str_horas = f'{datosTiempoJugador[1]}' if datosTiempoJugador[1] > 9 else f'0{datosTiempoJugador[1]}'
         str_minutos = f'{datosTiempoJugador[2]}' if datosTiempoJugador[2] > 9 else f'0{datosTiempoJugador[2]}'
@@ -490,13 +583,18 @@ def mostrarTopX():
         pdf.cell(w=75, h=15, txt=datosTiempoJugador[0], border=1, align='C', fill=0)
         tiempoResultado = str_horas + ":" + str_minutos + ":" + str_segundos
         pdf.multi_cell(w=0, h=15, txt= tiempoResultado, border=1, align='C', fill=0)
+        contador += 1
 
     pdf.cell(120, 8, ln=True)
     pdf.cell(120, 8, txt='Facil', ln=True)
     pdf.cell(w=75, h=15, txt='Jugador', border=1, align='C', fill=0)
     pdf.multi_cell(w=0, h=15, txt='Tiempo', border=1, align='C', fill=0)
 
-    for datosTiempoJugador in listaConTiempos[2]:
+    contador = 0
+    for datosTiempoJugador in listaConTiemposTop[0]:
+        if contador == cantidadjugadasTopX and cantidadjugadasTopX != 0:
+            break
+
         str_horas = f'{datosTiempoJugador[1]}' if datosTiempoJugador[1] > 9 else f'0{datosTiempoJugador[1]}'
         str_minutos = f'{datosTiempoJugador[2]}' if datosTiempoJugador[2] > 9 else f'0{datosTiempoJugador[2]}'
         str_segundos = f'{datosTiempoJugador[3]}' if datosTiempoJugador[3] > 9 else f'0{datosTiempoJugador[3]}'
@@ -504,7 +602,7 @@ def mostrarTopX():
         pdf.cell(w=75, h=15, txt=datosTiempoJugador[0], border=1, align='C', fill=0)
         tiempoResultado = str_horas + ":" + str_minutos + ":" + str_segundos
         pdf.multi_cell(w=0, h=15, txt=tiempoResultado, border=1, align='C', fill=0)
-
+        contador += 1
 
     pdf.output('Prueba.pdf')
     webbrowser.open_new('Prueba.pdf')
@@ -731,7 +829,6 @@ def configurar():
         global c_horas, c_minutos, c_segundos
 
 
-
         if timer:
             try:
                 horas = int(entryHoras.get())
@@ -808,14 +905,14 @@ def reseteoDeJuego():
 
     matrizTeclado = []
 
-    partida = []
+    seleccionDePartida()
 
     pilaJugadasHechas = []
 
     pilaJugadasEliminadas = []
 
-    if reloj == True or timer == True:
-        pausar_reloj()
+   # if reloj == True or timer == True: #Importe
+      #  pausar_reloj()
 
     horas, minutos, segundos = c_horas, c_minutos, c_segundos
 
@@ -851,6 +948,7 @@ def jugar():
     entryNombre.place(x=510, y=130)
 
     actualizarListaDeJuego()
+    cargarTopX()
 
     def updateGUI(i, j):
         global matriz
@@ -898,21 +996,13 @@ def jugar():
             deshacer_jugada.config(relief=RAISED, state='active', activebackground='#4af9ff')
 
         if ganarPartida():
-            if dificultadSeleccionada == 'Facil':
-                tiempoJugador = TopX(nombre, dificultadSeleccionada, horas, minutos, segundos)
-                tiempoJugador.append(listaTopPartidasFaciles)
-            elif dificultadSeleccionada == 'Intermedia':
-                tiempoJugador = TopX(nombre, dificultadSeleccionada, horas, minutos, segundos)
-                tiempoJugador.append(listaTopPartidasIntermedias)
-            elif dificultadSeleccionada == 'Dificil':
-                tiempoJugador = TopX(nombre, dificultadSeleccionada, horas, minutos, segundos)
-                tiempoJugador.append(listaTopPartidasDificiles)
-
             messagebox.showinfo('JUEGO COMPLETADO', '¡EXCELENTE! JUEGO COMPLETADO')
 
+            print(partida)
             ventanaJuego.destroy()
             reseteoDeJuego()
             jugar()
+            print(partida)
 
 
 
@@ -998,6 +1088,7 @@ def jugar():
         global matrizTeclado
         global copia_partida
         global nombre
+        global flagCargarJuego
 
 
         if validacionNombre():
@@ -1005,7 +1096,8 @@ def jugar():
 
         entryNombre.config(state='disabled')
 
-        seleccionDePartida()
+        # if not flagCargarJuego:
+        #     seleccionDePartida() #Borrar
 
         cargar_juego_boton.config(relief=SUNKEN, state='disabled')
 
@@ -1013,10 +1105,21 @@ def jugar():
 
             modificaMatriz(partida, listaCaracteresElegidos, defaultList)
 
+        print (partida)
+
         # Actualiza la cuadricula con la partida seleccionada al azar
         for i in range(9):
+            print ('Fila',i)
             for j in range(9):
+                print ('Columna',j)
                 botonActual = matriz[i][j]
+                print (matriz)
+                print(type(botonActual))
+                print(botonActual)
+                textoEliminar = botonActual.cget('text')
+                print (textoEliminar)
+                print('Partida 2', partida)
+                print (partida[i][j])
                 if partida[i][j] != '':
                     botonActual.config(text=partida[i][j])
 
@@ -1031,6 +1134,9 @@ def jugar():
 
         nombre = str(entryNombre.get())
 
+        print(timer)
+        print(reloj)
+
         if timer:
             update_timer()
 
@@ -1038,13 +1144,13 @@ def jugar():
             update_reloj()
 
     def opcionTerminarJuego():
+        global reloj, timer
 
         global matriz, partida
 
         respuesta = messagebox.askyesno('BORRAR JUEGO','¿ESTÁ SEGURO DE TERMINAR EL JUEGO?')
 
         if respuesta == 1:
-
             reseteoDeJuego()
             ventanaJuego.destroy()
             jugar()
@@ -1168,8 +1274,11 @@ def jugar():
 ##############FLAGS###################
 ######################################
 
+flagCargarJuego = False
+
 timer = False
-reloj = False
+reloj = True
+
 
 reloj_reseteado = False
 
@@ -1182,12 +1291,7 @@ pilaJugadasHechas = []
 
 pilaJugadasEliminadas = []
 
-listaTopPartidasFaciles = []
-
-listaTopPartidasIntermedias = []
-
-listaTopPartidasDificiles = []
-
+listaConTiemposTop = [[], [], []] # D, I, F
 
 horas = 0
 minutos = 0
@@ -1204,7 +1308,7 @@ cantidadjugadasTopX = 0
 
 configElementos = ''
 
-eleccionTimerDown = 0 # Prueba
+eleccionTimerDown = 50 # Prueba
 
 matriz = []
 
@@ -1329,6 +1433,7 @@ partidasDificiles = {
         ['', '', '', '3', '', '', '', '', '']]
 }
 
+
 copia_partidas_faciles = {
     1: [['2', '5', '7', '4', '', '', '', '6', '9'],
         ['6', '', '1', '2', '', '', '7', '', ''],
@@ -1425,11 +1530,20 @@ copia_partidas_dificiles = {
         ['', '', '', '3', '', '', '', '', '']]
 }
 
-partida = []
+partida = [['2', '5', '7', '4', '2', '2', '2', '6', '9'],
+        ['6', '2', '1', '2', '2', '2', '7', '2', '2'],
+        ['2', '2', '8', '9', '2', '2', '2', '2', '5'],
+        ['4', '2', '2', '8', '2', '7', '2', '2', '1'],
+        ['2', '2', '2', '6', '3', '4', '9', '7', '8'],
+        ['7', '2', '9', '5', '2', '2', '4', '2', '6'],
+        ['2', '2', '2', '2', '2', '2', '2', '5', '2'],
+        ['2', '2', '2', '2', '2', '2', '1', '9', '7'],
+        ['9', '2', '2', '7', '2', '5', '2', '2', '']]
 
+numero = 1 # Borrar
 
 def seleccionDePartida():
-    global partida,dificultadSeleccionada,numero
+    global partida, dificultadSeleccionada, numero
 
     numero = random.randint(1, 3)
 
