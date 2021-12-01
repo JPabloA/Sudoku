@@ -11,6 +11,7 @@ import random
 import pickle
 from fpdf import FPDF
 import webbrowser
+import copy
 
 ###################################################
 # SECCIÓN DE CLASES                               #
@@ -928,7 +929,7 @@ def jugar(): # Ventena con interfaz principal de juego
     global entryNombre
     global ventanaJuego
     global entryNombre
-    global nombre, opcionIniciarJuego
+    global nombre, opcionIniciarJuego, dificultadSeleccionada
 
     ventanaJuego = Toplevel(ventanaPrincipal)
 
@@ -946,6 +947,14 @@ def jugar(): # Ventena con interfaz principal de juego
     nombreJugador = Label(ventanaJuego, text='Jugador', fg='White', borderwidth=3, bg='#3e97b8',
                           font=('Arial', '16', 'bold italic'))
     nombreJugador.place(x=590, y=100)
+
+    nivel = Label(ventanaJuego, text='Nivel: ', fg='White', borderwidth=3, bg='#3e97b8',
+                          font=('Arial', '18', 'bold italic'))
+    nivel.place(x=80, y=640)
+
+    dificultad = Label(ventanaJuego, text=dificultadSeleccionada, fg='White', borderwidth=3, bg='#3e97b8',
+                          font=('Arial', '18', 'bold italic'))
+    dificultad.place(x=150, y=640)
 
     entryNombre = Entry(ventanaJuego, width=40)
     entryNombre.place(x=510, y=130)
@@ -1051,7 +1060,7 @@ def jugar(): # Ventena con interfaz principal de juego
         matriz.append(fila)
 
     def extraerInfoTecla(fila, columna): # Extrae la ubicación del botón para identificarlo
-        global infoBotonTeclado
+        global infoBotonTeclado, timer, reloj
 
         infoBotonTeclado = [fila, columna]
         procesoSeleccionBotonesTeclado()
@@ -1148,7 +1157,7 @@ def jugar(): # Ventena con interfaz principal de juego
         global reloj, timer, c_reloj, c_timer
         global matriz, partida
 
-        respuesta = messagebox.askyesno('BORRAR JUEGO','¿ESTÁ SEGURO DE TERMINAR EL JUEGO?')
+        respuesta = messagebox.askyesno('TERMINAR JUEGO','¿ESTÁ SEGURO DE TERMINAR EL JUEGO?')
 
         if respuesta == 1:
             reseteoDeJuego()
@@ -1533,7 +1542,7 @@ copia_partidas_dificiles = {
         ['', '', '', '3', '', '', '', '', '']]
 }
 
-partida = [['2', '5', '7', '4', '2', '2', '2', '6', '9'],
+partida = [['2', '5', '7', '4', '2', '2', '2', '6', '9'], # Partida rapida en caso de querer ganar
         ['6', '2', '1', '2', '2', '2', '7', '2', '2'],
         ['2', '2', '8', '9', '2', '2', '2', '2', '5'],
         ['4', '2', '2', '8', '2', '7', '2', '2', '1'],
@@ -1551,11 +1560,11 @@ def seleccionDePartida(): # Crea un numero random para escoger una partida guard
     numero = random.randint(1, 3)
 
     if dificultadSeleccionada == 'Facil':
-        partida = partidasFaciles[numero]
+        partida = copy.deepcopy(partidasFaciles[numero])
     elif dificultadSeleccionada == 'Intermedio':
-        partida = partidasIntermedias[numero]
+        partida = copy.deepcopy(partidasIntermedias[numero])
     else:
-        partida = partidasDificiles[numero]
+        partida = copy.deepcopy(partidasDificiles[numero])
 
 
 def modificaMatriz(partida, listaNueva, defaultList): # Modifica los elementos de la matriz seleccionada como partida (Se encarga de pasar la matriz de numeros a simbolos o a letras y viceversa)
