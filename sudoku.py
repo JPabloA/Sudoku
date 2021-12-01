@@ -718,6 +718,8 @@ def configurar(): # Ventana de selección de configuración para el usuario
 
             reloj = True
             timer = False
+            c_reloj = reloj
+            c_timer = timer
 
 
         if opcionMarcadaReloj == 2:
@@ -728,11 +730,15 @@ def configurar(): # Ventana de selección de configuración para el usuario
 
             timer = False
             reloj = False
+            c_reloj = reloj
+            c_timer = timer
 
 
         if opcionMarcadaReloj == 3:
             timer = True
             reloj = False
+            c_reloj = reloj
+            c_timer = timer
 
             entrySegundos.config(state=NORMAL, justify=CENTER)
             entryHoras.config(state=NORMAL, justify=CENTER)
