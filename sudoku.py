@@ -918,6 +918,7 @@ def reseteoDeJuego(): # Reinicia todas las variables de juego para poder empezar
 
     pilaJugadasEliminadas = []
 
+
     horas, minutos, segundos = c_horas, c_minutos, c_segundos
 
 
@@ -1160,6 +1161,8 @@ def jugar(): # Ventena con interfaz principal de juego
         respuesta = messagebox.askyesno('TERMINAR JUEGO','¿ESTÁ SEGURO DE TERMINAR EL JUEGO?')
 
         if respuesta == 1:
+            reloj = c_reloj
+            timer = c_timer
             reseteoDeJuego()
             ventanaJuego.destroy()
             jugar()
