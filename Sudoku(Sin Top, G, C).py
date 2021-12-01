@@ -166,21 +166,21 @@ def ganarPartida():
         if timer:
             conversion = tiempoTranscurridoTimer()
             ordenarTiempo((nombre, conversion[0], conversion[1], conversion[2]), listaConTiemposTop[0])
-        else:
+        elif reloj:
             ordenarTiempo((nombre, horas, minutos, segundos), listaConTiemposTop[0])
 
     elif dificultadSeleccionada == 'Intermedio':
         if timer:
             conversion = tiempoTranscurridoTimer()
             ordenarTiempo((nombre, conversion[0], conversion[1], conversion[2]), listaConTiemposTop[1])
-        else:
+        elif reloj:
             ordenarTiempo((nombre, horas, minutos, segundos), listaConTiemposTop[1])
 
     elif dificultadSeleccionada == 'Dificil':
         if timer:
             conversion = tiempoTranscurridoTimer()
             ordenarTiempo((nombre, conversion[0], conversion[1], conversion[2]), listaConTiemposTop[2])
-        else:
+        elif reloj:
             ordenarTiempo((nombre, horas, minutos, segundos), listaConTiemposTop[2])
 
     archivoAGuardar = open('sudoku2021topx.dat', 'wb' )
@@ -192,6 +192,7 @@ def ganarPartida():
 def timerExpirado():
 
     global timer,horas, minutos, segundos, c_horas, c_minutos, c_segundos, reloj, ventanaJuego,ventanaPrincipal, eleccionTimerDown
+    global c_timer, c_reloj
 
     if timer == True and horas == 0 and minutos == 0 and segundos == 0:
 
@@ -205,7 +206,10 @@ def timerExpirado():
 
             return True
 
-        elif respuesta == 1:
+        c_reloj = reloj
+        c_timer = timer
+
+        if respuesta == 1:
             eleccionTimerDown = respuesta
 
             reloj = True
@@ -990,7 +994,8 @@ def jugar():
             jugadaActual = Jugadas_hechas(i, j, textoEnPosicion, textoBotonTeclado)
             pilaJugadasHechas.append(jugadaActual)
 
-        guardar_juego_boton.config(state='active', relief=RAISED, activebackground="#d8d9d4" )
+        guardar_juego_boton.config(state='active', relief=RAISED, activebackground="#d8d9d4")
+        borrar_juego.config(state='active', relief=RAISED, activebackground="#25b058")
 
         if pilaJugadasHechas != []:
             deshacer_jugada.config(relief=RAISED, state='active', activebackground='#4af9ff')
@@ -998,12 +1003,9 @@ def jugar():
         if ganarPartida():
             messagebox.showinfo('JUEGO COMPLETADO', '¡EXCELENTE! JUEGO COMPLETADO')
 
-            print(partida)
             ventanaJuego.destroy()
             reseteoDeJuego()
             jugar()
-            print(partida)
-
 
 
     def procesoSeleccionBotonesTeclado():
@@ -1096,30 +1098,28 @@ def jugar():
 
         entryNombre.config(state='disabled')
 
-        # if not flagCargarJuego:
-        #     seleccionDePartida() #Borrar
+        if pilaJugadasHechas != []:
+            deshacer_jugada.config(relief=RAISED, state='active', activebackground='#4af9ff')
+
+        if pilaJugadasEliminadas != []:
+            rehacer_jugada.config(relief=RAISED, state='active', activebackground='#4af9ff')
+
+        if not flagCargarJuego:
+            seleccionDePartida()
 
         cargar_juego_boton.config(relief=SUNKEN, state='disabled')
 
         if listaCaracteresElegidos != defaultList:
-
             modificaMatriz(partida, listaCaracteresElegidos, defaultList)
 
-        print (partida)
 
         # Actualiza la cuadricula con la partida seleccionada al azar
         for i in range(9):
-            print ('Fila',i)
+
             for j in range(9):
-                print ('Columna',j)
                 botonActual = matriz[i][j]
-                print (matriz)
-                print(type(botonActual))
-                print(botonActual)
                 textoEliminar = botonActual.cget('text')
-                print (textoEliminar)
-                print('Partida 2', partida)
-                print (partida[i][j])
+
                 if partida[i][j] != '':
                     botonActual.config(text=partida[i][j])
 
@@ -1132,10 +1132,12 @@ def jugar():
 
         validacionNombre()
 
-        nombre = str(entryNombre.get())
+        terminar_juego.config(relief=RAISED, state='active', activebackground="#96027e")
 
-        print(timer)
-        print(reloj)
+        if flagCargarJuego:
+            borrar_juego.config(relief=RAISED, state='active', activebackground="#25b058")
+
+        nombre = str(entryNombre.get())
 
         if timer:
             update_timer()
@@ -1144,7 +1146,7 @@ def jugar():
             update_reloj()
 
     def opcionTerminarJuego():
-        global reloj, timer
+        global reloj, timer, c_reloj, c_timer
 
         global matriz, partida
 
@@ -1158,64 +1160,54 @@ def jugar():
     def undo():
         global pilaJugadasHechas, pilaJugadasEliminadas, matriz, partida
 
-        ultimaJugadaObjeto = pilaJugadasHechas.pop()
-
-        jugadaAAgregar = Jugadas_eliminadas(ultimaJugadaObjeto.fila, ultimaJugadaObjeto.columna,
-                                            ultimaJugadaObjeto.elementoAnterior, ultimaJugadaObjeto.nuevoElemento)
-        pilaJugadasEliminadas.append(jugadaAAgregar)
-
-        ultimaJugadaLista = ultimaJugadaObjeto.obtener_jugada_hecha()
-
         if pilaJugadasHechas == []:  # Modificacion aqui
-            deshacer_jugada.config(relief=SUNKEN, state='disabled')
+            messagebox.showwarning('ERROR', 'NO HAY JUGADAS PARA DESHACER')
         else:
-            deshacer_jugada.config(relief=RAISED, state='active', activebackground='#4af9ff')  # Modificacion aqui
 
-        if pilaJugadasEliminadas == []:  # Modificacion aqui
-            rehacer_jugada.config(relief=SUNKEN, state='disabled')
-        else:
-            rehacer_jugada.config(relief=RAISED, state='active', activebackground='#4af9ff')  # Modificacion aqui
+            ultimaJugadaObjeto = pilaJugadasHechas.pop()
 
-        fila = ultimaJugadaLista[0]
-        columna = ultimaJugadaLista[1]
-        elemento = ultimaJugadaLista[2]
+            jugadaAAgregar = Jugadas_eliminadas(ultimaJugadaObjeto.fila, ultimaJugadaObjeto.columna,
+                                                ultimaJugadaObjeto.elementoAnterior, ultimaJugadaObjeto.nuevoElemento)
+            pilaJugadasEliminadas.append(jugadaAAgregar)
 
-        for indiceFila in range(9):
-            for indiceColumna in range(9):
-                if fila == indiceFila and columna == indiceColumna:
-                    matriz[fila][columna].config(text=elemento)
-                    partida[fila][columna] = elemento
+            ultimaJugadaLista = ultimaJugadaObjeto.obtener_jugada_hecha()
+
+
+            fila = ultimaJugadaLista[0]
+            columna = ultimaJugadaLista[1]
+            elemento = ultimaJugadaLista[2]
+
+            for indiceFila in range(9):
+                for indiceColumna in range(9):
+                    if fila == indiceFila and columna == indiceColumna:
+                        matriz[fila][columna].config(text=elemento)
+                        partida[fila][columna] = elemento
+
+            rehacer_jugada.config(state='active', relief=RAISED, activebackground="#4af9ff")
 
     def redo():
         global matriz, partida, pilaJugadasEliminadas, pilaJugadasHechas, textoBotonTeclado
 
-        ultimaJugadaObjeto = pilaJugadasEliminadas.pop()
-
-        jugadaAAgregar = Jugadas_hechas(ultimaJugadaObjeto.fila, ultimaJugadaObjeto.columna,
-                                        ultimaJugadaObjeto.elementoAnterior, ultimaJugadaObjeto.nuevoElemento)
-        pilaJugadasHechas.append(jugadaAAgregar)
-
-        ultimaJugadaLista = ultimaJugadaObjeto.obtener_jugada_eliminada()
-
-        if pilaJugadasEliminadas == []:  # Modificacion aqui
-            rehacer_jugada.config(relief=SUNKEN, state='disabled')
+        if pilaJugadasEliminadas == []:
+            messagebox.showwarning('ERROR', 'NO HAY JUGADAS PARA REHACER')
         else:
-            rehacer_jugada.config(relief=RAISED, state='active', activebackground='#4af9ff')  # Modificacion aqui
+            ultimaJugadaObjeto = pilaJugadasEliminadas.pop()
 
-        if pilaJugadasHechas == []:  # Modificacion aqui
-            deshacer_jugada.config(relief=SUNKEN, state='disabled')
-        else:
-            deshacer_jugada.config(relief=RAISED, state='active', activebackground='#4af9ff')  # Modificacion aqui
+            jugadaAAgregar = Jugadas_hechas(ultimaJugadaObjeto.fila, ultimaJugadaObjeto.columna,
+                                            ultimaJugadaObjeto.elementoAnterior, ultimaJugadaObjeto.nuevoElemento)
+            pilaJugadasHechas.append(jugadaAAgregar)
 
-        fila = ultimaJugadaLista[0]
-        columna = ultimaJugadaLista[1]
-        elemento = ultimaJugadaLista[-1]
+            ultimaJugadaLista = ultimaJugadaObjeto.obtener_jugada_eliminada()
 
-        for indiceFila in range(9):
-            for indiceColumna in range(9):
-                if fila == indiceFila and columna == indiceColumna:
-                    matriz[fila][columna].config(text=elemento)
-                    partida[fila][columna] = elemento
+            fila = ultimaJugadaLista[0]
+            columna = ultimaJugadaLista[1]
+            elemento = ultimaJugadaLista[-1]
+
+            for indiceFila in range(9):
+                for indiceColumna in range(9):
+                    if fila == indiceFila and columna == indiceColumna:
+                        matriz[fila][columna].config(text=elemento)
+                        partida[fila][columna] = elemento
 
     def opcionBorrar():
         global pilaJugadasHechas, pilaJugadasEliminadas
@@ -1227,6 +1219,7 @@ def jugar():
                 undo()
 
             rehacer_jugada.config(relief=SUNKEN, state='disabled')
+            borrar_juego.config(relief=SUNKEN, state='disabled')
         else:
             return
 
@@ -1250,11 +1243,11 @@ def jugar():
                             font=("Helvetica", "12", "italic"), command=redo)
     rehacer_jugada.place(x=450, y=575, width=100, height=50)
 
-    borrar_juego = Button(ventanaJuego, text="BORRAR\n JUEGO", bg="#25b058", fg="black",
+    borrar_juego = Button(ventanaJuego, text="BORRAR\n JUEGO", bg="#25b058", fg="black", state='disabled', relief=SUNKEN,
                           font=("Helvetica", "12", "italic"), command= opcionBorrar)
     borrar_juego.place(x=570, y=500, width=100, height=50)
 
-    terminar_juego = Button(ventanaJuego, text="TERMINAR\n JUEGO", bg="#96027e", fg="black",
+    terminar_juego = Button(ventanaJuego, text="TERMINAR\n JUEGO", bg="#96027e", fg="black", state='disabled', relief=SUNKEN,
                           font=("Helvetica", "12", "italic"),command=opcionTerminarJuego)
     terminar_juego.place(x=570, y=575, width=100, height=50)
 
@@ -1278,6 +1271,9 @@ flagCargarJuego = False
 
 timer = False
 reloj = True
+
+c_reloj = reloj
+c_timer = timer
 
 
 reloj_reseteado = False
@@ -1540,7 +1536,6 @@ partida = [['2', '5', '7', '4', '2', '2', '2', '6', '9'],
         ['2', '2', '2', '2', '2', '2', '1', '9', '7'],
         ['9', '2', '2', '7', '2', '5', '2', '2', '']]
 
-numero = 1 # Borrar
 
 def seleccionDePartida():
     global partida, dificultadSeleccionada, numero
