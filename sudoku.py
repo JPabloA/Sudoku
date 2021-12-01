@@ -612,8 +612,8 @@ def mostrarTopX(): # Muestra y crea la lista en formato '.pdf' del top X, depend
         pdf.multi_cell(w=0, h=15, txt=tiempoResultado, border=1, align='C', fill=0)
         contador += 1
 
-    pdf.output('Prueba.pdf')
-    webbrowser.open_new('Prueba.pdf')
+    pdf.output('TopX.pdf')
+    webbrowser.open_new('TopX.pdf')
 
 def configurar(): # Ventana de selección de configuración para el usuario
     global horas
@@ -705,7 +705,7 @@ def configurar(): # Ventana de selección de configuración para el usuario
 
     def verificarReloj(opcionMarcadaReloj,opcionMarcadaDificultad): # Valida los datos ingresados por el usuario en los entries del timer y realiza las recomendaciones de tiempo dependiendo de la dificultad seleccionada
 
-        global timer, reloj, horas, minutos, segundos
+        global timer, reloj, horas, minutos, segundos, c_timer, c_reloj
 
 
         if opcionMarcadaReloj == 1:
